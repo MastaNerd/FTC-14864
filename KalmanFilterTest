@@ -1,0 +1,81 @@
+package org.firstinspires.ftc.teamcode;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
+public class FirstTest extends LinerOpMode{
+
+    // todo: write your code here
+
+
+ private void button__Direction(
+      // TODO: Enter the type for argument named x
+      UNKNOWN_TYPE x,
+      // TODO: Enter the type for argument named i
+      UNKNOWN_TYPE i) {
+    double tgtPwr;
+
+    tgtPwr = -x;
+    FL.setPower(hardwareMap.dcMotor);
+  }
+  
+  public void kalFilt(float currSensData,float currModCo,float timeCount){
+        KG = (curModCo)/(0.2 + curModCo);
+
+
+        modPos = curSensData[timeCount][0] * 43;
+        sensPos = curSensData[timeCount][1]; // v smells
+
+
+        estPos = modPos + KG * (sensPos - modPos);
+
+
+        curModCo = (1 - KG)*currModCo;
+
+
+        if (curSensData[timeCount][0] == 1){
+            return estPos;
+        }
+        else{      
+            return kalFilt(curSensData, curModCo, timeCount + 1);
+        }
+    }
+
+  /**
+   * This function is executed when this Op Mode is selected from the Driver Station.
+   */
+  @Override
+  public void runOpMode() {
+    imu = hardwareMap.get(IMU.class, "imu");
+    
+    //IMU Parameteres Defining
+    RevHubOrientationOnRobot.LogoFacingDirection logoDirection =(
+        RevHubOrientationOnRobot.LogoFacingDirection.UP);
+    
+    RevHubOrientationOnRobot.UsbFacingDirection usbDirection =(
+        RevHubOrientationOnRobot.USBFacingDirection.FORWARD);
+    
+    RevHubOrientationOnRobot orientateRobot = 
+        new RevHubOrientationOnRobot(logoDirection, usbDirection);
+
+    //Initiulaiing IMU
+    imu.initialize(
+        new IMU.Parameters(orientateRobot));
+    
+    
+    waitForStart();
+    
+    if (opModeIsActive()) {
+      
+      while (opModeIsActive()) {
+        // Put loop blocks here.
+        
+        
+        
+        
+      }
+    }
+  }
+}
