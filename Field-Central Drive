@@ -1,0 +1,115 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
+
+import java.util.Arrays;
+import java.lang.Math;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+
+@TeleOp(name = "JayIsCool (Blocks to Java)")
+public class Veleop extends LinearOpMode {
+
+  private DcMotor BLMotor;
+  private DcMotor FLMotor;
+  private DcMotor BRMotor;
+  private DcMotor FRMotor;
+  private IMU imu;
+  
+  // Mechanum Wheel Power Function
+  public double[] whlPowerer(double stkAng,double robAng){
+    
+    robAng = robAng + 180;
+    
+    double relRobAng = stkAng - robAng;
+      
+    if (relRobAng < 0){ 
+      relRobAng = relRobAng + 360;
+    }
+    
+    double[] FL_BL = {0,0};
+    
+    FL_BL[0]= Math.sin(relRobAng + 90);
+    FL_BL[1]= Math.sin(relRobAng - 90);
+    
+    return FL_BL;
+  }
+
+
+  /**
+   * This function is executed when this Op Mode is selected from the Driver Station.
+   */
+  @Override
+  public void runOpMode() {
+    float xDrive;
+    float yDrive;
+    float Pivot;
+    
+    //Define IMU Parameters
+    imu = hardwareMap.get(IMU.class, "imu");
+    
+    RevHubOrientationOnRobot.LogoFacingDirection logoDir = RevHubOrientationOnRobot.LogoFacingDirection.UP;
+    RevHubOrientationOnRobot.UsbFacingDirection usbDir = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+      
+    RevHubOrientationOnRobot orientateOnRob = new RevHubOrientationOnRobot(logoDir, usbDir);
+    
+    //initializign IMU
+    imu.initialize(new IMU.Parameters(orientateOnRob));
+    
+    //Object recieving IMu angles
+    YawPitchRollAngles robOrientate;
+    robOrientate = imu.getRobotYawPitchRollAngles();
+    
+    //Defining motors
+    BLMotor = hardwareMap.get(DcMotor.class, "BL Motor");
+    FLMotor = hardwareMap.get(DcMotor.class, "FL Motor");
+    BRMotor = hardwareMap.get(DcMotor.class, "BR Motor");
+    FRMotor = hardwareMap.get(DcMotor.class, "FR Motor");
+
+    // Put initialization blocks here.
+    BLMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+    FLMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+    BLMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    BRMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    FLMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    FRMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    
+    
+    waitForStart();
+    if (opModeIsActive()) {
+      // Put run blocks here.
+      while (opModeIsActive()) {
+        // Put loop blocks here.
+        BLMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        BRMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FLMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FRMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        
+        xDrive = gamepad1.left_stick_x;
+        yDrive = gamepad1.left_stick_y;
+  
+        double lStkAng = Math.atan(yDrive / xDrive);
+        double Yaw = robOrientate.getYaw(AngleUnit.DEGREES);
+        
+        double[] whlPower = whlPowerer(lStkAng, Yaw);
+        
+        //BLMotor.setPower(whlPower[0]);
+        //BRMotor.setPower(whlPower[0]);
+        //FLMotor.setPower(whlPower[1]);
+        //FRMotor.setPower(whlPower[1]);
+        telemetry.addData("FL and BR",whlPower[0]);
+        telemetry.addData("BL and FR",whlPower[1]);
+        telemetry.addData("Yaw",Yaw);
+        telemetry.addData("StickAngle",lStkAng);
+        telemetry.update();
+      }
+    }
+  }
+}
