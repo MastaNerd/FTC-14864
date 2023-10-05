@@ -95,7 +95,27 @@ public class Veleop extends LinearOpMode {
         xDrive = gamepad1.left_stick_x;
         yDrive = gamepad1.left_stick_y;
   
-        double lStkAng = Math.atan(yDrive / xDrive);
+        //Getting Stick Angle
+        double lStkAng = Math.atan(yDrive / xDrive) * 180/3.14159265;
+        if (lStkAng < 0 && yDrive < 0){
+          lStkAng = lStkAng * -1;
+        }
+        else if (lStkAng < 0 && yDrive > 0){
+          lStkAng = lStkAng * -1 + 180;
+        }
+        else if (lStkAng > 0 && yDrive < 0){
+          lStkAng = lStkAng * -1 + 180;
+        }
+        else if (lStkAng > 0 && yDrive > 0){
+          lStkAng = lStkAng * -1 + 360;
+        }
+        else if ((lStkAng == 0)&&(xDrive < 0)){
+          lStkAng = 180;
+        }
+        else if ((lStkAng == 0)&&(xDrive > 0)){
+          lStkAng = 0;
+        }
+        
         double Yaw = robOrientate.getYaw(AngleUnit.DEGREES);
         
         double[] whlPower = whlPowerer(lStkAng, Yaw);
