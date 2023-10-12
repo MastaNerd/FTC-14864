@@ -10,11 +10,16 @@ import com.qualcomm.robotcore.hardware.IMU;
 import java.util.Arrays;
 import java.lang.Math;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-@TeleOp(name = "Vibeleop (Java)")
+@TeleOp(name = "Vibelop (Java)")
 public class Veleop extends LinearOpMode {
 
   private DcMotor BLMotor;
@@ -26,7 +31,10 @@ public class Veleop extends LinearOpMode {
   // Mechanum Wheel Power Function
   public double[] whlPowerer(double stkAng,double robAng){
     
-    robAng = robAng + 180;
+    //robAng = robAng + 180;
+    if (robAng < 0){
+      robAng = robAng + 360;
+    }
     
     double relRobAng = stkAng - robAng;
       
@@ -34,12 +42,28 @@ public class Veleop extends LinearOpMode {
       relRobAng = relRobAng + 360;
     }
     
+    
     double[] FL_BL = {0,0};
     
-    FL_BL[0]= Math.sin(relRobAng + 90);
-    FL_BL[1]= Math.sin(relRobAng - 90);
+    FL_BL[0]= Math.sin((relRobAng + 45)*(3.14159265/180));
+    FL_BL[1]= Math.sin((relRobAng + 135)*(3.14159265/180));
     
     return FL_BL;
+  }
+  
+  public void turnPowerer(double xRight){
+    if (xRight > 0){
+        BLMotor.setPower(1);
+        FRMotor.setPower(-1);
+        FLMotor.setPower(1);
+        BRMotor.setPower(-1);
+    }
+    else{
+        BLMotor.setPower(-1);
+        FRMotor.setPower(1);
+        FLMotor.setPower(-1);
+        BRMotor.setPower(1);
+    }
   }
 
 
@@ -51,6 +75,7 @@ public class Veleop extends LinearOpMode {
     float xDrive;
     float yDrive;
     float Pivot;
+    float xTurn;
     
     //Define IMU Parameters
     imu = hardwareMap.get(IMU.class, "imu");
@@ -94,38 +119,50 @@ public class Veleop extends LinearOpMode {
         
         xDrive = gamepad1.left_stick_x;
         yDrive = gamepad1.left_stick_y;
+        
+        xTurn = gamepad1.right_stick_x;
+        
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
   
         //Getting Stick Angle
         double lStkAng = Math.atan(yDrive / xDrive) * 180/3.14159265;
         if (lStkAng < 0 && yDrive < 0){
-          lStkAng = lStkAng * -1;
+          lStkAng = lStkAng * -1 + 270;
         }
         else if (lStkAng < 0 && yDrive > 0){
-          lStkAng = lStkAng * -1 + 180;
+          lStkAng = lStkAng * -1 + 90;
         }
         else if (lStkAng > 0 && yDrive < 0){
-          lStkAng = lStkAng * -1 + 180;
+          lStkAng = lStkAng * -1 + 90;
         }
         else if (lStkAng > 0 && yDrive > 0){
-          lStkAng = lStkAng * -1 + 360;
+          lStkAng = lStkAng * -1 + 270;
         }
         else if ((lStkAng == 0)&&(xDrive < 0)){
-          lStkAng = 180;
+          lStkAng = 90;
         }
         else if ((lStkAng == 0)&&(xDrive > 0)){
-          lStkAng = 0;
+          lStkAng = 270;
         }
         
-        double Yaw = robOrientate.getYaw(AngleUnit.DEGREES);
+        double Yaw = orientation.getYaw(AngleUnit.DEGREES);
         
         double[] whlPower = whlPowerer(lStkAng, Yaw);
         
-        //BLMotor.setPower(whlPower[0]);
-        //BRMotor.setPower(whlPower[0]);
-        //FLMotor.setPower(whlPower[1]);
-        //FRMotor.setPower(whlPower[1]);
-        telemetry.addData("FL and BR",whlPower[0]);
-        telemetry.addData("BL and FR",whlPower[1]);
+        if (xTurn == 0){
+          BLMotor.setPower(whlPower[0]);
+          FRMotor.setPower(whlPower[0]);
+          FLMotor.setPower(whlPower[1]);
+          BRMotor.setPower(whlPower[1]);
+          telemetry.addData("FL and BR",whlPower[0]);
+          telemetry.addData("BL and FR",whlPower[1]);
+        }
+        else {
+          turnPowerer(xTurn);
+          telemetry.addData("xTurn",xTurn);
+        }
+        
         telemetry.addData("Yaw",Yaw);
         telemetry.addData("StickAngle",lStkAng);
         telemetry.update();
