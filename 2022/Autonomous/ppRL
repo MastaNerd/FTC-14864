@@ -1,0 +1,492 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
+import java.util.List;
+import org.firstinspires.ftc.robotcore.external.JavaUtil;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaCurrentGame;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.Tfod;
+
+@Autonomous(name = "ppRL (Blocks to Java)")
+public class ppRL extends LinearOpMode {
+
+  private VuforiaCurrentGame vuforiaPOWERPLAY;
+  private Tfod tfod;
+  private DcMotor FL;
+  private DcMotor FR;
+  private DcMotor BL;
+  private DcMotor BR;
+  private DcMotor eleAsDcMotor;
+  private Servo clawAsServo;
+
+  int tgtposfo;
+  int done;
+  int level;
+  Recognition recognition;
+  int three;
+  int two;
+  int one;
+
+  /**
+   * This function is executed when this Op Mode is selected from the Driver Station.
+   */
+  @Override
+  public void runOpMode() {
+    int tgtpostl;
+    int tgtpostr;
+    int tgtposba;
+    double confi;
+    List<Recognition> recognitions;
+    int index;
+
+    vuforiaPOWERPLAY = new VuforiaCurrentGame();
+    tfod = new Tfod();
+    FL = hardwareMap.get(DcMotor.class, "FL");
+    FR = hardwareMap.get(DcMotor.class, "FR");
+    BL = hardwareMap.get(DcMotor.class, "BL");
+    BR = hardwareMap.get(DcMotor.class, "BR");
+    eleAsDcMotor = hardwareMap.get(DcMotor.class, "eleAsDcMotor");
+    clawAsServo = hardwareMap.get(Servo.class, "clawAsServo");
+
+    vuforiaPOWERPLAY.initialize(
+        "", // vuforiaLicenseKey
+        hardwareMap.get(WebcamName.class, "Webcam 1"), // cameraName
+        "", // webcamCalibrationFilename
+        false, // useExtendedTracking
+        false, // enableCameraMonitoring
+        VuforiaLocalizer.Parameters.CameraMonitorFeedback.NONE, // cameraMonitorFeedback
+        0, // dx
+        0, // dy
+        0, // dz
+        AxesOrder.XZY, // axesOrder
+        90, // firstAngle
+        90, // secondAngle
+        0, // thirdAngle
+        true); // useCompetitionFieldTargetLocations
+    // Set isModelTensorFlow2 to true if you used a TensorFlow
+    // 2 tool, such as ftc-ml, to create the model.
+    //
+    // Set isModelQuantized to true if the model is
+    // quantized. Models created with ftc-ml are quantized.
+    //
+    // Set inputSize to the image size corresponding to the model.
+    // If your model is based on SSD MobileNet v2
+    // 320x320, the image size is 300 (srsly!).
+    // If your model is based on SSD MobileNet V2 FPNLite 320x320, the image size is 320.
+    // If your model is based on SSD MobileNet V1 FPN 640x640 or
+    // SSD MobileNet V2 FPNLite 640x640, the image size is 640.
+    tfod.useModelFromFile("model_20221117_163309.tflite", JavaUtil.createListWith("1", "2", "3"), true, true, 320);
+    tfod.initialize(vuforiaPOWERPLAY, (float) 0.4, true, true);
+    tfod.setClippingMargins(30, 80, 30, 0);
+    tfod.activate();
+    telemetry.addData("DS preview on/off", "3 dots, Camera Stream");
+    telemetry.addData(">", "Press Play to start");
+    telemetry.update();
+    FL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    FR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    BL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    BR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    eleAsDcMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    eleAsDcMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+    one = 0;
+    two = 0;
+    three = 0;
+    level = 0;
+    tgtposfo = 0;
+    tgtpostl = 0;
+    tgtpostr = 0;
+    tgtposba = 0;
+    done = 0;
+    confi = 0.7;
+    waitForStart();
+    telemetry.update();
+    if (opModeIsActive()) {
+      // Put run blocks here.
+      clawAsServo.setPosition(0.8);
+      sleep(500);
+      stop_reset();
+      ((DcMotorEx) BL).setTargetPositionTolerance(3);
+      ((DcMotorEx) BR).setTargetPositionTolerance(3);
+      ((DcMotorEx) FL).setTargetPositionTolerance(3);
+      ((DcMotorEx) FR).setTargetPositionTolerance(3);
+      ((DcMotorEx) eleAsDcMotor).setTargetPositionTolerance(20);
+      tgtposfo = 166;
+      eleAsDcMotor.setTargetPosition(3000);
+      eleAsDcMotor.setPower(0.5);
+      eleAsDcMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+      while (!!(eleAsDcMotor.isBusy() && !BL.isBusy() && !FL.isBusy() && !FR.isBusy() && !BR.isBusy())) {
+        ((DcMotorEx) BL).setTargetPositionTolerance(3);
+        ((DcMotorEx) BR).setTargetPositionTolerance(3);
+        ((DcMotorEx) FL).setTargetPositionTolerance(3);
+        ((DcMotorEx) FR).setTargetPositionTolerance(3);
+        FL.setTargetPosition(-tgtposfo);
+        FR.setTargetPosition(tgtposfo);
+        BL.setTargetPosition(-tgtposfo);
+        BR.setTargetPosition(tgtposfo);
+        FL.setPower(-0.1);
+        FR.setPower(0.1);
+        BL.setPower(-0.1);
+        BR.setPower(0.1);
+        FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (!(!BL.isBusy() && !FL.isBusy() && !FR.isBusy() && !BR.isBusy())) {
+          tel();
+        }
+        tel();
+      }
+      FL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+      FR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+      BL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+      BR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+      eleAsDcMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+      stop_reset();
+      while (opModeIsActive() && one < 7 && two < 5 && three < 5) {
+        // Get a list of recognitions from TFOD.
+        recognitions = tfod.getRecognitions();
+        // If list is empty, inform the user. Otherwise, go
+        // through list and display info for each recognition.
+        if (JavaUtil.listLength(recognitions) == 0) {
+          telemetry.addData("TFOD", "No items detected.");
+        } else {
+          index = 0;
+          // Iterate through list and call a function to
+          // display info for each recognized object.
+          for (Recognition recognition_item : recognitions) {
+            recognition = recognition_item;
+            // Display info.
+            displayInfo(index, confi);
+            // Increment index.
+            index = index + 1;
+            if (level == 10) {
+              level = 0;
+              confi += -0.1;
+            }
+          }
+        }
+        telemetry.update();
+      }
+      if (one >= 7) {
+        ((DcMotorEx) BL).setTargetPositionTolerance(5);
+        ((DcMotorEx) BR).setTargetPositionTolerance(5);
+        ((DcMotorEx) FL).setTargetPositionTolerance(5);
+        ((DcMotorEx) FR).setTargetPositionTolerance(5);
+        fowrward(200);
+        stop_reset();
+        back(45);
+        stop_reset();
+        TurnR(170);
+        stop_reset();
+        back(260);
+      } else if (two >= 5) {
+        stop_reset();
+        fowrward(170);
+      } else if (three >= 5) {
+        ((DcMotorEx) FL).setTargetPositionTolerance(5);
+        ((DcMotorEx) FR).setTargetPositionTolerance(5);
+        ((DcMotorEx) BL).setTargetPositionTolerance(5);
+        ((DcMotorEx) BR).setTargetPositionTolerance(5);
+        stop_reset();
+        fowrward(200);
+        stop_reset();
+        back(45);
+        stop_reset();
+        TurnL(170);
+        stop_reset();
+        back(260);
+      }
+      eleAsDcMotor.setTargetPosition(0);
+      eleAsDcMotor.setPower(-0.4);
+      eleAsDcMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+      sleep(3000);
+    }
+    // Put initialization blocks here.
+    tfod.deactivate();
+
+    vuforiaPOWERPLAY.close();
+    tfod.close();
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void displayInfo(int i, double conf) {
+    // Display the location of the top left corner
+    // of the detection boundary for the recognition
+    telemetry.addData("Label: " + recognition.getLabel() + ", Confidence: " + recognition.getConfidence(), "X: " + Math.round(JavaUtil.averageOfList(JavaUtil.createListWith(Double.parseDouble(JavaUtil.formatNumber(recognition.getLeft(), 0)), Double.parseDouble(JavaUtil.formatNumber(recognition.getRight(), 0))))) + ", Y: " + Math.round(JavaUtil.averageOfList(JavaUtil.createListWith(Double.parseDouble(JavaUtil.formatNumber(recognition.getTop(), 0)), Double.parseDouble(JavaUtil.formatNumber(recognition.getBottom(), 0))))));
+    if (recognition.getLabel().equals("1") && recognition.getConfidence() > conf) {
+      telemetry.addData("key", 1);
+      telemetry.addData("three", three);
+      telemetry.addData("two", two);
+      telemetry.addData("one", one);
+      done = 1;
+      one += 1;
+      telemetry.update();
+      sleep(500);
+    } else if (recognition.getLabel().equals("2") && recognition.getConfidence() > conf) {
+      telemetry.addData("key", 2);
+      telemetry.addData("three", three);
+      telemetry.addData("two", two);
+      telemetry.addData("one", one);
+      done = 1;
+      two += 1;
+      telemetry.update();
+      sleep(500);
+    } else if (recognition.getLabel().equals("3") && recognition.getConfidence() > conf) {
+      telemetry.addData("key", 3);
+      telemetry.addData("three", three);
+      telemetry.addData("two", two);
+      telemetry.addData("one", one);
+      three += 1;
+      done = 1;
+      telemetry.update();
+      sleep(500);
+    }
+    level += 1;
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void stop_reset2() {
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void stop_reset() {
+    FL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    FR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    BL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    BR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    eleAsDcMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    sleep(500);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void fowrward(int tgtposfo) {
+    FL.setTargetPosition(-tgtposfo);
+    FR.setTargetPosition(tgtposfo);
+    BL.setTargetPosition(-tgtposfo);
+    BR.setTargetPosition(tgtposfo);
+    FL.setPower(-0.1);
+    FR.setPower(0.1);
+    BL.setPower(-0.1);
+    BR.setPower(0.1);
+    FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    while (!(!BL.isBusy() && !FL.isBusy() && !FR.isBusy() && !BR.isBusy())) {
+      tel();
+    }
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void fowrward2(
+      // TODO: Enter the type for argument named tgtposfo
+      UNKNOWN_TYPE tgtposfo) {
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void TurnL2(double tgtpostl) {
+    FL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    FR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    BL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    BR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    ((DcMotorEx) FL).setVelocity(tgtpostl);
+    ((DcMotorEx) FR).setVelocity(tgtpostl);
+    ((DcMotorEx) BL).setVelocity(tgtposfo);
+    ((DcMotorEx) BR).setVelocity(tgtposfo);
+    FL.setPower(0.2);
+    FR.setPower(0.2);
+    BL.setPower(0.2);
+    BR.setPower(0.2);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void TurnL(int tgtpostl) {
+    ((DcMotorEx) FL).setTargetPositionTolerance(6);
+    ((DcMotorEx) FR).setTargetPositionTolerance(6);
+    ((DcMotorEx) BL).setTargetPositionTolerance(6);
+    ((DcMotorEx) BR).setTargetPositionTolerance(6);
+    FL.setTargetPosition(tgtpostl);
+    FR.setTargetPosition(tgtpostl);
+    BL.setTargetPosition(tgtpostl);
+    BR.setTargetPosition(tgtpostl);
+    FL.setPower(0.2);
+    FR.setPower(0.2);
+    BL.setPower(0.2);
+    BR.setPower(0.2);
+    FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    while (!(!BL.isBusy() && !FL.isBusy() && !FR.isBusy() && !BR.isBusy())) {
+      tel();
+    }
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void TurnR(int tgtpostr) {
+    ((DcMotorEx) FL).setTargetPositionTolerance(6);
+    ((DcMotorEx) FR).setTargetPositionTolerance(6);
+    ((DcMotorEx) BL).setTargetPositionTolerance(6);
+    ((DcMotorEx) BR).setTargetPositionTolerance(6);
+    FL.setTargetPosition(-tgtpostr);
+    FR.setTargetPosition(-tgtpostr);
+    BL.setTargetPosition(-tgtpostr);
+    BR.setTargetPosition(-tgtpostr);
+    FL.setPower(-0.2);
+    FR.setPower(-0.2);
+    BL.setPower(-0.2);
+    BR.setPower(-0.2);
+    FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    while (!(!BL.isBusy() && !FL.isBusy() && !FR.isBusy() && !BR.isBusy())) {
+      tel();
+    }
+    sleep(1000);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void back(int tgtposba) {
+    ((DcMotorEx) FL).setTargetPositionTolerance(4);
+    ((DcMotorEx) FR).setTargetPositionTolerance(4);
+    ((DcMotorEx) BL).setTargetPositionTolerance(4);
+    ((DcMotorEx) BR).setTargetPositionTolerance(4);
+    FL.setTargetPosition(tgtposba);
+    FR.setTargetPosition(-tgtposba);
+    BL.setTargetPosition(tgtposba);
+    BR.setTargetPosition(-tgtposba);
+    FL.setPower(0.1);
+    FR.setPower(-0.1);
+    BL.setPower(0.1);
+    BR.setPower(-0.1);
+    FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    while (!(!BL.isBusy() && !FL.isBusy() && !FR.isBusy() && !BR.isBusy() || isStopRequested())) {
+      tel();
+    }
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void left(int tgtposle) {
+    while (!(FL.getCurrentPosition() == -tgtposle && BR.getCurrentPosition() == tgtposle || isStopRequested())) {
+      ((DcMotorEx) FL).setTargetPositionTolerance(5);
+      ((DcMotorEx) FR).setTargetPositionTolerance(5);
+      ((DcMotorEx) BL).setTargetPositionTolerance(5);
+      ((DcMotorEx) BR).setTargetPositionTolerance(5);
+      FL.setTargetPosition(-tgtposle);
+      FR.setTargetPosition(-tgtposle);
+      BL.setTargetPosition(tgtposle);
+      BR.setTargetPosition(tgtposle);
+      FL.setPower(-0.1);
+      FR.setPower(-0.2);
+      BL.setPower(0.2);
+      BR.setPower(0.2);
+      FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+      FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+      BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+      BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+      tel();
+    }
+    TurnL(90);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void right(int tgtposri) {
+    ((DcMotorEx) FL).setTargetPositionTolerance(5);
+    ((DcMotorEx) FR).setTargetPositionTolerance(5);
+    ((DcMotorEx) BL).setTargetPositionTolerance(5);
+    ((DcMotorEx) BR).setTargetPositionTolerance(5);
+    FL.setTargetPosition(tgtposri);
+    FR.setTargetPosition(tgtposri);
+    BL.setTargetPosition(-tgtposri);
+    BR.setTargetPosition(-tgtposri);
+    FL.setPower(0.2);
+    FR.setPower(0.2);
+    BL.setPower(-0.2);
+    BR.setPower(-0.2);
+    FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    TurnR(90);
+    while (BL.isBusy() && FL.isBusy() && FR.isBusy() && BR.isBusy()) {
+      telemetry.addData("BL", BL.getCurrentPosition());
+      telemetry.addData("FL", FL.getCurrentPosition());
+      telemetry.addData("FR", FR.getCurrentPosition());
+      telemetry.addData("FR", FR.getCurrentPosition());
+    }
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void right2(long tgtposri) {
+    FL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    BL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    BR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    FR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    ((DcMotorEx) FL).setVelocity(-200);
+    ((DcMotorEx) FR).setVelocity(-200);
+    ((DcMotorEx) BL).setVelocity(-200);
+    ((DcMotorEx) BR).setVelocity(200);
+    sleep(tgtposri);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void right3(long tgtposri) {
+    FL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    BL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    BR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    FR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    ((DcMotorEx) FL).setVelocity(-200);
+    ((DcMotorEx) FR).setVelocity(-200);
+    ((DcMotorEx) BL).setVelocity(-200);
+    ((DcMotorEx) BR).setVelocity(200);
+    sleep(tgtposri);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void tel() {
+    telemetry.addData("BL", BL.getCurrentPosition());
+    telemetry.addData("FL", FL.getCurrentPosition());
+    telemetry.addData("FR", FR.getCurrentPosition());
+    telemetry.addData("FR", FR.getCurrentPosition());
+  }
+}
