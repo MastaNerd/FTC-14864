@@ -1,0 +1,106 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+
+@TeleOp(name = "FieldCentric (Blocks to Java)")
+public class FieldCentric extends LinearOpMode {
+
+  private IMU imu_IMU;
+  private DcMotor BLMotor;
+  private DcMotor FLMotor;
+  private DcMotor BRMotor;
+  private DcMotor FRMotor;
+
+  double angTrue;
+  double tgtpower_FL;
+  double tgtpower_FR;
+  double tgtpower_BL;
+  double tgtpower_BR;
+  double ang;
+  YawPitchRollAngles robOr;
+
+  /**
+   * This function is executed when this Op Mode is selected from the Driver Station.
+   */
+  @Override
+  public void runOpMode() {
+    imu_IMU = hardwareMap.get(IMU.class, "imu");
+    BLMotor = hardwareMap.get(DcMotor.class, "BL Motor");
+    FLMotor = hardwareMap.get(DcMotor.class, "FL Motor");
+    BRMotor = hardwareMap.get(DcMotor.class, "BR Motor");
+    FRMotor = hardwareMap.get(DcMotor.class, "FR Motor");
+
+    // Put initialization blocks here.
+    // Initializes the IMU with non-default settings. To use this block,
+    // plug one of the "new IMU.Parameters" blocks into the parameters socket.
+    // Creates a Parameters object for use with an IMU in a REV Robotics Control Hub or Expansion Hub, specifying the hub's orientation on the robot via the direction that the REV Robotics logo is facing and the direction that the USB ports are facing.
+    imu_IMU.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.LEFT)));
+    BLMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+    FLMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+    BLMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    BRMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    FLMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    FRMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    waitForStart();
+    if (opModeIsActive()) {
+      // Put run blocks here.
+      while (opModeIsActive()) {
+        // Put loop blocks here.
+        BLMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        BRMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FLMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FRMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        robOr = imu_IMU.getRobotYawPitchRollAngles();
+        ang = Math.atan2(-gamepad1.left_stick_y, gamepad1.left_stick_x) / Math.PI * 180 - robOr.getYaw(AngleUnit.DEGREES);
+        if (ang >= 0) {
+          angTrue = ang;
+        } else {
+          angTrue = 360 + ang;
+        }
+        if (gamepad1.left_stick_y != 0 || gamepad1.left_stick_x != 0 || gamepad1.right_stick_x != 0) {
+          tgtpower_BL = (Math.sin((angTrue - 45) / 180 * Math.PI) + gamepad1.right_stick_x) * 0.75;
+          BLMotor.setPower(tgtpower_BL);
+          tgtpower_BR = (Math.sin((angTrue + 45) / 180 * Math.PI) - gamepad1.right_stick_x) * 0.75;
+          BRMotor.setPower(tgtpower_BR);
+          tgtpower_FL = Math.sin((angTrue + 45) / 180 * Math.PI) + gamepad1.right_stick_x;
+          FLMotor.setPower(tgtpower_FL);
+          tgtpower_FR = Math.sin((angTrue - 45) / 180 * Math.PI) - gamepad1.right_stick_x;
+          FRMotor.setPower(tgtpower_FR);
+          telemetry2();
+          telemetry.update();
+        } else {
+          tgtpower_BL = 0;
+          BLMotor.setPower(tgtpower_BL);
+          tgtpower_BR = 0;
+          BRMotor.setPower(tgtpower_BR);
+          tgtpower_FL = 0;
+          FLMotor.setPower(tgtpower_FL);
+          tgtpower_FR = 0;
+          FRMotor.setPower(tgtpower_FR);
+          telemetry2();
+          telemetry.update();
+        }
+      }
+    }
+  }
+  private void telemetry2() {
+    telemetry.addData("Target Power FL", tgtpower_FL);
+    telemetry.addData("Motor Power FL", FLMotor.getPower());
+    telemetry.addData("Target Power FR", tgtpower_FR);
+    telemetry.addData("Motor Power FR", FRMotor.getPower());
+    telemetry.addData("Target Power BL", tgtpower_BL);
+    telemetry.addData("Motor Power BL", BLMotor.getPower());
+    telemetry.addData("Target Power BR", tgtpower_BR);
+    telemetry.addData("Motor Power BR", BRMotor.getPower());
+    telemetry.addData("angTrue", angTrue);
+    telemetry.addData("ang", ang);
+    telemetry.addData("yaw", robOr.getYaw(AngleUnit.DEGREES));
+  }
+}
