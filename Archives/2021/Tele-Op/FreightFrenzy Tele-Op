@@ -1,0 +1,200 @@
+ackage org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+
+@TeleOp(name = "backup_1572719121388_Test (Blocks to Java)")
+@Disabled
+public class backup_1572719121388_Test extends LinearOpMode {
+
+  private DcMotor FLAsDcMotor;
+  private DcMotor FRAsDcMotor;
+  private DcMotor BLAsDcMotor;
+  private DcMotor BRAsDcMotor;
+  private Servo pinch_clawAsServo;
+  private DcMotor catAsDcMotor;
+
+  int max;
+  int catapultRange;
+  int tgtpower_FL;
+  int open;
+  float CatapultPwr;
+  float tgtpower_FR;
+  float tgtpower_BL;
+  float tgtpower_BR;
+
+  /**
+   * Describe this function...
+   */
+  private void cap() {
+    if (tgtpower_FL > 1) {
+      tgtpower_FL = 1;
+    }
+    if (tgtpower_FL < -1) {
+      tgtpower_FL = -1;
+    }
+    if (tgtpower_FR > 1) {
+      tgtpower_FR = 1;
+    }
+    if (tgtpower_FR < -1) {
+      tgtpower_FR = -1;
+    }
+    if (tgtpower_BL > 1) {
+      tgtpower_BL = 1;
+    }
+    if (tgtpower_BL < -1) {
+      tgtpower_BL = -1;
+    }
+    if (tgtpower_BR > 1) {
+      tgtpower_BR = 1;
+    }
+    if (tgtpower_BR < -1) {
+      tgtpower_BR = -1;
+    }
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void go() {
+    float drive;
+    float turn;
+    float strafe;
+
+    drive = -gamepad1.left_stick_y;
+    turn = gamepad1.right_stick_x;
+    strafe = gamepad1.left_stick_x;
+    FLAsDcMotor.setPower(tgtpower_FL);
+    tgtpower_FL = (int) ((drive + turn) - strafe);
+    FRAsDcMotor.setPower(tgtpower_FR);
+    tgtpower_FR = drive + turn + strafe;
+    BLAsDcMotor.setPower(tgtpower_BL);
+    tgtpower_BL = (drive - turn) + strafe;
+    BRAsDcMotor.setPower(tgtpower_BR);
+    tgtpower_BR = (drive - turn) - strafe;
+  }
+
+  /**
+   * This function is executed when this Op Mode is selected from the Driver Station.
+   */
+  @Override
+  public void runOpMode() {
+    FLAsDcMotor = hardwareMap.get(DcMotor.class, "FLAsDcMotor");
+    FRAsDcMotor = hardwareMap.get(DcMotor.class, "FRAsDcMotor");
+    BLAsDcMotor = hardwareMap.get(DcMotor.class, "BLAsDcMotor");
+    BRAsDcMotor = hardwareMap.get(DcMotor.class, "BRAsDcMotor");
+    pinch_clawAsServo = hardwareMap.get(Servo.class, "pinch_clawAsServo");
+    catAsDcMotor = hardwareMap.get(DcMotor.class, "catAsDcMotor");
+
+    // Put initialization blocks here.
+    waitForStart();
+    catapultRange = 0;
+    pinch_clawAsServo.setPosition(0);
+    open = false;
+    if (opModeIsActive()) {
+      // Put run blocks here.
+      while (opModeIsActive()) {
+        go();
+        cap();
+        arm();
+        claw();
+        telemetry2();
+        telemetry.update();
+      }
+    }
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void telemetry2() {
+    telemetry.addData("Target Power FL", tgtpower_FL);
+    telemetry.addData("Motor Power FL", FLAsDcMotor.getPower());
+    telemetry.addData("Target Power FR", tgtpower_FR);
+    telemetry.addData("Motor Power FR", FRAsDcMotor.getPower());
+    telemetry.addData("Target Power BL", tgtpower_BL);
+    telemetry.addData("Motor Power BL", BLAsDcMotor.getPower());
+    telemetry.addData("Target Power BR", tgtpower_BR);
+    telemetry.addData("Motor Power BR", BRAsDcMotor.getPower());
+    telemetry.addData("Cpow", CatapultPwr);
+    telemetry.addData("Mpow", catAsDcMotor.getPower());
+    telemetry.addData("Crange", catapultRange);
+    telemetry.addData("claw open", open);
+    telemetry.addData("claw pos", pinch_clawAsServo.getPosition());
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void arm() {
+    max = 13;
+    catAsDcMotor.setPower(CatapultPwr);
+    if (catapultRange > max) {
+      catapultRange = max;
+    }
+    if (-gamepad2.left_stick_y >= 0 && catapultRange <= max) {
+      catapultRange = (int) (catapultRange + catAsDcMotor.getPower());
+      sleep(10);
+    }
+    if (catapultRange < 0) {
+      catapultRange = 0;
+    } else if (-gamepad2.left_stick_y < 0 && catapultRange >= 0) {
+      catapultRange = (int) (catapultRange + catAsDcMotor.getPower());
+      sleep(10);
+    }
+    if (catapultRange < max && catapultRange >= -15) {
+      CatapultPwr = -gamepad2.left_stick_y;
+    } else {
+      CatapultPwr = 0;
+      catAsDcMotor.setPower(0);
+    }
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void arm2() {
+    max = 13;
+    catAsDcMotor.setPower(CatapultPwr);
+    if (catapultRange <= max) {
+      catapultRange = max;
+    } else if (false) {
+    }
+    if (catapultRange >= -1) {
+      catapultRange = -1;
+    } else {
+    }
+    if (catapultRange < max && catapultRange >= -1) {
+      CatapultPwr = -gamepad2.left_stick_y;
+    } else {
+      CatapultPwr = 0;
+      catAsDcMotor.setPower(0);
+    }
+    if (-gamepad2.left_stick_y < 0 && catapultRange >= 0) {
+      catapultRange = (int) (catapultRange + catAsDcMotor.getPower());
+      sleep(10);
+    }
+    if (-gamepad2.left_stick_y >= 0 && catapultRange <= max) {
+      catapultRange = (int) (catapultRange + catAsDcMotor.getPower());
+      sleep(10);
+    }
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void claw() {
+    if (gamepad2.right_trigger == 1 && open == 0) {
+      open = 1;
+      sleep(500);
+    }
+    if (gamepad2.right_trigger == 1 && open == 1) {
+      open = 0;
+      sleep(500);
+    }
+    pinch_clawAsServo.setPosition(open / 5);
+  }
+}
