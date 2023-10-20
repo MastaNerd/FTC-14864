@@ -1,0 +1,464 @@
+package org.firstinspires.ftc.teamcode;
+
+import android.graphics.Color;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.robotcore.external.JavaUtil;
+
+@Autonomous(name = "RL (Blocks to Java)")
+@Disabled
+public class RL extends LinearOpMode {
+
+  private ColorSensor colorAsREVColorRangeSensor;
+  private DcMotor catAsDcMotor;
+  private DcMotor FLAsDcMotor;
+  private DcMotor FRAsDcMotor;
+  private DcMotor BLAsDcMotor;
+  private DcMotor BRAsDcMotor;
+  private Servo pinchClaw0AsServo;
+  private Servo pinchClaw1AsServo;
+  private DcMotor rotateAsDcMotor;
+
+  int Current_Color;
+  float hue;
+  float sat;
+  float val;
+
+  /**
+   * Describe this function...
+   */
+  private void color() {
+    Current_Color = Color.argb(colorAsREVColorRangeSensor.alpha(), colorAsREVColorRangeSensor.red(), colorAsREVColorRangeSensor.green(), colorAsREVColorRangeSensor.blue());
+    hue = JavaUtil.colorToHue(Current_Color);
+  }
+
+  /**
+   * This function is executed when this Op Mode is selected from the Driver Station.
+   */
+  @Override
+  public void runOpMode() {
+    double max1;
+    ElapsedTime runtime;
+
+    colorAsREVColorRangeSensor = hardwareMap.get(ColorSensor.class, "colorAsREVColorRangeSensor");
+    catAsDcMotor = hardwareMap.get(DcMotor.class, "catAsDcMotor");
+    FLAsDcMotor = hardwareMap.get(DcMotor.class, "FLAsDcMotor");
+    FRAsDcMotor = hardwareMap.get(DcMotor.class, "FRAsDcMotor");
+    BLAsDcMotor = hardwareMap.get(DcMotor.class, "BLAsDcMotor");
+    BRAsDcMotor = hardwareMap.get(DcMotor.class, "BRAsDcMotor");
+    pinchClaw0AsServo = hardwareMap.get(Servo.class, "pinchClaw0AsServo");
+    pinchClaw1AsServo = hardwareMap.get(Servo.class, "pinchClaw1AsServo");
+    rotateAsDcMotor = hardwareMap.get(DcMotor.class, "rotateAsDcMotor");
+
+    // Put initialization blocks here.
+    runtime = new ElapsedTime();
+    Close_claw();
+    sleep(200);
+    while (!(opModeIsActive() || isStopRequested())) {
+      color();
+      max1 = hue;
+      telemetry.addData("hue", hue);
+      telemetry.update();
+    }
+    waitForStart();
+    if (opModeIsActive()) {
+      sleep(200);
+      catAsDcMotor.setPower(0.5);
+      sleep(200);
+      catAsDcMotor.setPower(0);
+      sleep(200);
+      forward();
+      sleep(375);
+      STOP();
+      sleep(100);
+      runtime.reset();
+      while (!(hue <= max1 - 6 || hue >= max1 + 6 || isStopRequested() || runtime.milliseconds() > 3000)) {
+        color();
+        right2();
+        color();
+        telemetry.addData("runtime", runtime.milliseconds());
+        telemetry.update();
+      }
+      if (runtime.milliseconds() <= 500) {
+        telemetry.addData("one", 123);
+        telemetry.update();
+        sleep(700);
+        right();
+        sleep(700);
+        turnR();
+        sleep(350);
+        STOP();
+        sleep(100);
+        STOP();
+        sleep(250);
+        forward();
+        sleep(300);
+        STOP();
+        sleep(1000);
+        Open_claw();
+        sleep(1000);
+        backward();
+        sleep(300);
+        STOP();
+        sleep(500);
+        end();
+      } else if (runtime.milliseconds() > 500 && runtime.milliseconds() <= 1500) {
+        telemetry.addData("two", 123);
+        telemetry.update();
+        sleep(700);
+        right();
+        // adjust
+        sleep(100);
+        STOP();
+        sleep(250);
+        turnR();
+        // adjust
+        sleep(200);
+        STOP();
+        sleep(100);
+        catAsDcMotor.setPower(0.5);
+        // CALC
+        sleep(200);
+        catAsDcMotor.setPower(0);
+        sleep(1000);
+        forward();
+        sleep(200);
+        STOP();
+        sleep(1000);
+        Open_claw();
+        sleep(1000);
+        backward();
+        sleep(200);
+        STOP();
+        sleep(500);
+        catAsDcMotor.setPower(-0.25);
+        sleep(250);
+        catAsDcMotor.setPower(0);
+        end4();
+      } else if (runtime.milliseconds() > 1500 && runtime.milliseconds() <= 3000) {
+        telemetry.addData("three", 123);
+        telemetry.update();
+        // adjust
+        sleep(700);
+        STOP();
+        sleep(250);
+        turnR();
+        // adjust
+        sleep(200);
+        STOP();
+        sleep(100);
+        catAsDcMotor.setPower(0.5);
+        // CALC
+        sleep(500);
+        catAsDcMotor.setPower(0);
+        sleep(1000);
+        forward();
+        sleep(200);
+        STOP();
+        sleep(1000);
+        Open_claw();
+        sleep(1000);
+        backward();
+        sleep(200);
+        STOP();
+        sleep(500);
+        catAsDcMotor.setPower(-0.25);
+        sleep(250);
+        catAsDcMotor.setPower(0);
+        end();
+      } else if (runtime.milliseconds() >= 3000) {
+        telemetry.addData("FAIL", 123);
+        telemetry.update();
+        // adjust
+        sleep(1000);
+        turnR();
+        // adjust
+        sleep(1000);
+        STOP();
+        sleep(100);
+        forward();
+        sleep(4000);
+        STOP();
+        sleep(1000);
+      }
+    }
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void color3() {
+    Current_Color = Color.argb(colorAsREVColorRangeSensor.alpha(), colorAsREVColorRangeSensor.red(), colorAsREVColorRangeSensor.green(), colorAsREVColorRangeSensor.blue());
+    val = JavaUtil.colorToValue(Current_Color);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void color2() {
+    Current_Color = Color.argb(colorAsREVColorRangeSensor.alpha(), colorAsREVColorRangeSensor.red(), colorAsREVColorRangeSensor.green(), colorAsREVColorRangeSensor.blue());
+    val = JavaUtil.colorToValue(Current_Color);
+    hue = JavaUtil.colorToHue(Current_Color);
+    sat = JavaUtil.colorToSaturation(Current_Color);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void color5() {
+    Current_Color = Color.argb(colorAsREVColorRangeSensor.alpha(), colorAsREVColorRangeSensor.red(), colorAsREVColorRangeSensor.green(), colorAsREVColorRangeSensor.blue());
+    sat = JavaUtil.colorToSaturation(Current_Color);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void color4() {
+    Current_Color = Color.argb(colorAsREVColorRangeSensor.alpha(), colorAsREVColorRangeSensor.red(), colorAsREVColorRangeSensor.green(), colorAsREVColorRangeSensor.blue());
+    hue = JavaUtil.colorToHue(Current_Color);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void forward() {
+    FLAsDcMotor.setPower(1);
+    FRAsDcMotor.setPower(-1);
+    BLAsDcMotor.setPower(1);
+    BRAsDcMotor.setPower(-1);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void STOP() {
+    FLAsDcMotor.setPower(0);
+    FRAsDcMotor.setPower(0);
+    BRAsDcMotor.setPower(0);
+    BLAsDcMotor.setPower(0);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void turnL() {
+    FLAsDcMotor.setPower(-1);
+    FRAsDcMotor.setPower(1);
+    BLAsDcMotor.setPower(1);
+    BRAsDcMotor.setPower(-1);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void backward() {
+    FLAsDcMotor.setPower(-1);
+    FRAsDcMotor.setPower(1);
+    BLAsDcMotor.setPower(-1);
+    BRAsDcMotor.setPower(1);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void Close_claw() {
+    pinchClaw0AsServo.setPosition(0.55);
+    pinchClaw1AsServo.setPosition(0);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void Open_claw() {
+    pinchClaw0AsServo.setPosition(0.4);
+    pinchClaw1AsServo.setPosition(0.2);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void right() {
+    FLAsDcMotor.setPower(-1);
+    FRAsDcMotor.setPower(-1);
+    BLAsDcMotor.setPower(-1);
+    BRAsDcMotor.setPower(-1);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void right2() {
+    FLAsDcMotor.setPower(-0.5);
+    FRAsDcMotor.setPower(-0.5);
+    BLAsDcMotor.setPower(-0.5);
+    BRAsDcMotor.setPower(-0.5);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void turnR() {
+    FLAsDcMotor.setPower(1);
+    FRAsDcMotor.setPower(-1);
+    BLAsDcMotor.setPower(-1);
+    BRAsDcMotor.setPower(1);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void left() {
+    FLAsDcMotor.setPower(1);
+    FRAsDcMotor.setPower(1);
+    BLAsDcMotor.setPower(1);
+    BRAsDcMotor.setPower(1);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void end() {
+    left();
+    sleep(1000);
+    STOP();
+    sleep(100);
+    turnL();
+    sleep(2000);
+    STOP();
+    sleep(100);
+    forward();
+    sleep(500);
+    STOP();
+    sleep(100);
+    right();
+    sleep(1600);
+    STOP();
+    sleep(100);
+    rotateAsDcMotor.setPower(1);
+    sleep(4000);
+    rotateAsDcMotor.setPower(0);
+    sleep(300);
+    left();
+    sleep(600);
+    STOP();
+    sleep(400);
+    backward();
+    sleep(500);
+    STOP();
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void go_right() {
+    FLAsDcMotor.setPower(1);
+    FRAsDcMotor.setPower(-1);
+    BLAsDcMotor.setPower(1);
+    BRAsDcMotor.setPower(-1);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void end3() {
+    left();
+    sleep(1000);
+    STOP();
+    sleep(100);
+    turnL();
+    sleep(2500);
+    STOP();
+    sleep(100);
+    forward();
+    sleep(500);
+    STOP();
+    sleep(100);
+    right();
+    sleep(1600);
+    STOP();
+    sleep(100);
+    rotateAsDcMotor.setPower(1);
+    sleep(4000);
+    rotateAsDcMotor.setPower(0);
+    sleep(300);
+    left();
+    sleep(600);
+    STOP();
+    sleep(400);
+    backward();
+    sleep(500);
+    STOP();
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void end2() {
+    left();
+    sleep(2000);
+    STOP();
+    sleep(100);
+    turnL();
+    sleep(250);
+    STOP();
+    sleep(100);
+    backward();
+    sleep(250);
+    STOP();
+    sleep(100);
+    left();
+    sleep(300);
+    STOP();
+    sleep(400);
+    left();
+    sleep(500);
+    STOP();
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void do_something() {
+    sleep(300);
+    STOP();
+    sleep(100);
+  }
+
+  /**
+   * Describe this function...
+   */
+  private void end4() {
+    left();
+    sleep(1000);
+    STOP();
+    sleep(100);
+    turnL();
+    sleep(1750);
+    STOP();
+    sleep(100);
+    forward();
+    sleep(500);
+    STOP();
+    sleep(100);
+    right();
+    sleep(1600);
+    STOP();
+    sleep(100);
+    rotateAsDcMotor.setPower(1);
+    sleep(4000);
+    rotateAsDcMotor.setPower(0);
+    sleep(300);
+    left();
+    sleep(600);
+    STOP();
+    sleep(400);
+    backward();
+    sleep(500);
+    STOP();
+  }
+}
